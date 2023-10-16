@@ -25,7 +25,7 @@ Immerse yourself in the classic first-person shooter experience with intuitive c
 
 ## Screenshots
 
-[Include captivating screenshots or GIFs of your game here. Visuals are a key highlight of the project.]
+TBD
 
 ## Next Steps
 
@@ -45,6 +45,6 @@ To run the game locally, follow these steps:
 
 ## License
 
-This project is open-source and available under the [Your License Name] License. You can find the full license details in the [LICENSE](LICENSE) file.
+This project is open-source and available for everyone.
 
 
