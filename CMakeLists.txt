@@ -13,7 +13,7 @@ include_directories(${SDL2_INCLUDE_DIR})
 find_package(SDL2_IMAGE REQUIRED)
 include_directories(${SDL2_IMAGE_INCLUDE_DIR})
 
-add_executable(Raycasting main.cpp Player.cpp Player.h Game.cpp Game.h World.cpp World.h Screen.cpp Screen.h Logger.cpp Logger.h globals.cpp globals.h Character.cpp Character.h Monster.cpp Monster.h Textures.h Textures.cpp)
+add_executable(Raycasting main.cpp Player.cpp Player.h Game.cpp Game.h World.cpp World.h Screen.cpp Screen.h Logger.cpp Logger.h globals.cpp globals.h Character.cpp Character.h Monster.cpp Monster.h Textures.h Textures.cpp Weapon.cpp Weapon.h)
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES})
 

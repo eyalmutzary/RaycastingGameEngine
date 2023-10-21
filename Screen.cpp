@@ -37,13 +37,19 @@ Screen::Screen(int width, int height) : width(width), height(height) {
     }
     this->window = window;
     this->renderer = renderer;
+    // genereate random 8 little dark and spooky colors
     this->wall_types = {
-            {85, 85, 85, 255},   // A muted gray
-            {68, 68, 68, 255},   // A darker shade of gray
-            {51, 51, 51, 255},   // A slightly lighter gray
-            {102, 34, 34, 255},  // Dark red with a hint of brown
-            {85, 34, 85, 255},   // Deep purple with muted tones
-            {34, 68, 85, 255}    // Dark blue with a sense of foreboding
+            {
+                    {128, 128, 128, 255}, // Normal Gray
+                    {100, 80, 90, 255}, // Soft Purple
+                    {160, 0, 70, 255}, // Bright Blood Red
+                    {0, 100, 100, 255}, // Eerie Teal
+                    {150, 0, 150, 255}, // Lavender
+                    {100, 0, 100, 255}, // Muted Violet
+                    {120, 60, 0, 255}, // Burnt Orange
+                    {168, 140, 3, 255},
+                    {232, 28, 52, 255}// Crazy Yellow
+            }
     };
 
 
@@ -63,7 +69,7 @@ void Screen::clear() {
 }
 
 void make_darker_by_height(Color& color, int height){
-    float related_height = (SCREEN_HEIGHT/6) / float(height);
+    float related_height = (SCREEN_HEIGHT/FOG_FACTOR) / float(height);
     float factor = 1 / std::pow(M_E, related_height);
     if (factor > 1){
         factor = 1;
@@ -75,7 +81,7 @@ void make_darker_by_height(Color& color, int height){
 
 
 void make_darker_by_distance(Color& color, float distance) {
-    float factor = 1 / std::pow(M_E, distance/6);
+    float factor = 1 / std::pow(M_E, distance/FOG_FACTOR);
     if (factor > 1){
         factor = 1;
     }
@@ -84,13 +90,23 @@ void make_darker_by_distance(Color& color, float distance) {
     color.b *= factor;
 }
 
-void Screen::render_frame(const std::vector<LineType>& wall_line_lengths, const std::vector<MonsterRenderInfo>& monsters_render_info) {
+void make_sparking_effect(Color& color) {
+    color.r = std::min(color.r + 120, 255);
+}
+
+int calc_vertical_change(float player_angle_y) {
+    return SCREEN_HEIGHT - int(double(player_angle_y /  (M_PI/2)) * SCREEN_HEIGHT);
+}
+
+void Screen::render_frame(const std::vector<LineType>& wall_line_lengths, const std::vector<MonsterRenderInfo>& monsters_render_info, const Player& player) {
     this->clear();
     SDL_ShowCursor(SDL_DISABLE);
+    vertical_change = calc_vertical_change(player.angle_y);
     render_sky();
     render_floor();
     render_walls(wall_line_lengths);
     render_monsters(monsters_render_info);
+    render_game_overlay(player);
     SDL_RenderPresent(this->renderer);
 }
 
@@ -101,26 +117,27 @@ void Screen::drawRect(int x, int y, int w, int h) const{
 }
 
 void Screen::render_sky() const{
-    Color sky_color = {49, 26, 99};
+    Color sky_color = {70, 40, 120};
     // create a gradient background
-    for (int i=0; i < SCREEN_HEIGHT/2; i++){
+    for (int i=0; i < SCREEN_HEIGHT/2 + vertical_change; i++){
         Color color = sky_color;
-        make_darker_by_height(color, SCREEN_HEIGHT/2 - i);
+        make_darker_by_height(color, SCREEN_HEIGHT/2 - i + vertical_change);
         SDL_SetRenderDrawColor(this->renderer, color.r, color.g, color.b, color.a);
         drawRect(0, i, SCREEN_WIDTH, 1);
     }
 }
 
 void Screen::render_floor() const{
-    Color floor_color = {66, 55, 48};
+    Color floor_color = {77, 65, 56};
     // create a gradient background
-    for (int i=0; i < SCREEN_HEIGHT/2; i++){
+    for (int i=0; i < SCREEN_HEIGHT/2 - vertical_change; i++){
         Color color = floor_color;
         make_darker_by_height(color, i);
         SDL_SetRenderDrawColor(this->renderer, color.r, color.g, color.b, color.a);
-        drawRect(0, SCREEN_HEIGHT/2 + i, SCREEN_WIDTH, 1);
+        drawRect(0, SCREEN_HEIGHT/2 + i + vertical_change, SCREEN_WIDTH, 1);
     }
 }
+
 
 void Screen::render_walls(const std::vector<LineType>& line_lengths) const {
     for (int i=0; i < SCREEN_WIDTH; i++){
@@ -131,7 +148,29 @@ void Screen::render_walls(const std::vector<LineType>& line_lengths) const {
         Color color = this->wall_types[line_settings.type];
         make_darker_by_height(color, line_settings.height);
         SDL_SetRenderDrawColor(this->renderer, color.r, color.g, color.b, color.a);
-        SDL_RenderDrawLine(this->renderer, i, std::max(line_start, 0), i, std::min(line_end, SCREEN_HEIGHT));
+        SDL_RenderDrawLine(this->renderer, i, line_start + vertical_change, i, line_end + vertical_change);
+    }
+}
+
+void Screen::render_image(texture_t texture, int image_width, int image_height, float distance, int x_pos, int y_pos, bool is_sparking) const {
+    float rect_size_x = float(image_width) / float(texture[0].size());
+    float rect_size_y = float(image_height) / float(texture.size());
+    for (int i=0; i < texture.size(); i++){
+        for (int j=0; j < texture[0].size(); j++){
+            Color p_color = texture[i][j];
+            if (p_color.a == 0){
+                continue;
+            }
+            make_darker_by_distance(p_color, distance);
+            if (is_sparking){
+                make_sparking_effect(p_color);
+            }
+            SDL_SetRenderDrawColor(this->renderer, p_color.r, p_color.g, p_color.b, 255);
+            drawRect(std::floor(x_pos - (image_width/2) + i * rect_size_x),
+                     std::floor(y_pos + j*rect_size_y),
+                     std::ceil(rect_size_x),
+                     std::ceil(rect_size_y));
+        }
     }
 }
 
@@ -142,20 +181,27 @@ void Screen::render_monsters(const std::vector<MonsterRenderInfo>& monsters_rend
         return a.distance > b.distance;
     });
     for (const MonsterRenderInfo& monster_render_info : monsters_render_info_sorted){
-        float rect_size = float(monster_render_info.width) / float(monster_render_info.texture.size());
-        for (int i=0; i < monster_render_info.texture.size(); i++){
-            for (int j=0; j < monster_render_info.texture.size(); j++){
-                Color p_color = monster_render_info.texture[i][j];
-                if (p_color.a == 0){
-                    continue;
-                }
-                make_darker_by_distance(p_color, monster_render_info.distance);
-                SDL_SetRenderDrawColor(this->renderer, p_color.r, p_color.g, p_color.b, 255);
-                drawRect(std::floor(monster_render_info.x - (monster_render_info.width/2) + i * rect_size), std::floor(SCREEN_HEIGHT/2 + j*rect_size), std::ceil(rect_size), std::ceil(rect_size));
-            }
-        }
+        render_image(monster_render_info.texture, monster_render_info.width, monster_render_info.width, monster_render_info.distance, monster_render_info.x,  SCREEN_HEIGHT/2 + vertical_change, monster_render_info.is_sparking);
     }
+}
 
+void Screen::render_game_overlay(const Player& player) const {
+    render_weapon(player.current_weapon);
+    render_weapon_aim();
+}
+
+void Screen::render_weapon(const Weapon& weapon) const{
+    texture_t weapon_texture = weapon.texture_state.textures[weapon.texture_state.texture_index];
+    float weapon_scale = 4;
+    render_image(weapon_texture, int(weapon_texture[0].size() * weapon_scale), int(weapon_texture.size() * weapon_scale),0, SCREEN_WIDTH*0.68, SCREEN_HEIGHT - int(weapon_texture[0].size() * weapon_scale), false);
+}
+
+void Screen::render_weapon_aim() const{
+    SDL_SetRenderDrawColor(this->renderer, 209, 155, 67, 255);
+    SDL_RenderDrawLine(this->renderer, SCREEN_WIDTH/2 - 12, SCREEN_HEIGHT/2, SCREEN_WIDTH/2 -5, SCREEN_HEIGHT/2);
+    SDL_RenderDrawLine(this->renderer, SCREEN_WIDTH/2 + 5, SCREEN_HEIGHT/2, SCREEN_WIDTH/2 + 12, SCREEN_HEIGHT/2);
+    SDL_RenderDrawLine(this->renderer, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 12, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 5);
+    SDL_RenderDrawLine(this->renderer, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 5, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 12);
 }
 
 void Screen::render_game_over() const{

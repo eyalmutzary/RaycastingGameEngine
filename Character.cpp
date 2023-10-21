@@ -1,6 +1,10 @@
 #include "Character.h"
 
-Character::Character(float x, float y, float moving_speed) : x(x), y(y), moving_speed(moving_speed) {}
+long Character::id_counter = 0;
+
+Character::Character(float x, float y, float moving_speed, int health) : x(x), y(y), moving_speed(moving_speed), health(health) {
+    this->id = id_counter++;
+}
 
 
 void Character::move(float moving_angle, float moving_speed, const world_map_t& world_map){

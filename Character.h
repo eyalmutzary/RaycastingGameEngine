@@ -7,11 +7,14 @@
 
 class Character {
 public:
+    static long id_counter;
+    long id;
     float x;
     float y;
     float moving_speed;
+    int health;
 
-    Character(float x, float y, float moving_speed);
+    Character(float x, float y, float moving_speed, int health);
 
     void move(float moving_angle, float moving_speed, const world_map_t& world_map);
 };

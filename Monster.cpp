@@ -1,8 +1,9 @@
 #include "Monster.h"
 
 
-Monster::Monster(float x, float y, float moving_speed, texture_t texture)
-        : Character(x, y, moving_speed), texture(texture) {
+Monster::Monster(float x, float y, float moving_speed, texture_t texture, int health)
+        : Character(x, y, moving_speed, health), texture(texture){
+    hit_animation = {0, false, 0};
     distance_from_player = 99;
     angle_from_player = 0;
     is_active = false;
@@ -27,6 +28,10 @@ void Monster::calc_monster_relative_position(float player_x, float player_y) {
 }
 
 int Monster::calc_monster_width () const {
+    return int(SCREEN_WIDTH / distance_from_player) / 2;
+}
+
+int Monster::calc_monster_height () const {
     return int(SCREEN_HEIGHT / distance_from_player) / 2;
 }
 
@@ -40,13 +45,13 @@ int Monster::calc_monster_screen_x(const float player_angle){
 bool Monster::is_monster_visible(const Player& player, const std::vector<RayOutput>& rays_output, int monster_screen_x) {
     // check if not behind a wall
     float epsilon = 0.1;
-    if (distance_from_player > rays_output[monster_screen_x].distance + epsilon){
+    if (monster_screen_x > SCREEN_WIDTH || monster_screen_x < 0 || distance_from_player > rays_output[monster_screen_x].distance + epsilon){
         return false;
     }
     is_active = true;
 
     // check if in fov
-    if(!is_monster_in_fov(player) || monster_screen_x > SCREEN_WIDTH || monster_screen_x < 0){
+    if(!is_monster_in_fov(player)){
         return false;
     }
 
@@ -55,8 +60,8 @@ bool Monster::is_monster_visible(const Player& player, const std::vector<RayOutp
 
 
 bool Monster::is_monster_in_fov(const Player& player) const {
-    float left_view_border = player.angle - player.fov / 2.0;
-    float right_view_border = player.angle + player.fov / 2.0;
+    float left_view_border = player.angle_x - player.fov / 2.0;
+    float right_view_border = player.angle_x + player.fov / 2.0;
 
     left_view_border = fmod(left_view_border, 2 * M_PI);
     right_view_border = fmod(right_view_border, 2 * M_PI);
@@ -66,5 +71,21 @@ bool Monster::is_monster_in_fov(const Player& player) const {
         return left_view_border <= angle_from_player && angle_from_player <= right_view_border;
     } else {
         return left_view_border <= angle_from_player || angle_from_player <= right_view_border;
+    }
+}
+
+
+void Monster::animate() {
+    if (hit_animation.sparks_left > 0){
+        hit_animation.frames_in_current_spark++;
+        if (hit_animation.frames_in_current_spark > 1){
+            hit_animation.frames_in_current_spark = 0;
+            hit_animation.sparks_left--;
+            if (hit_animation.sparks_left % 2 == 0){
+                hit_animation.is_sparking = false;
+            } else {
+                hit_animation.is_sparking = true;
+            }
+        }
     }
 }

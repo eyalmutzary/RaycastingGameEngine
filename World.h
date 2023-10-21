@@ -13,7 +13,7 @@ class World {
 public:
     int height;
     int width;
-    std::vector<Monster> monsters;
+    std::vector<Monster> monsters; // TODO: change to unordered_map
     std::vector<std::vector<int>> world_map;
     Logger* logger;
 
@@ -23,6 +23,8 @@ public:
     RayOutput check_horizontal_distance(float pos_x, float pos_y, float angle) const;
     RayOutput check_vertical_distance(float pos_x, float pos_y, float angle) const;
     void move_monsters();
-};
+    void process_monsters_animation();
+
+    };
 
 #endif //RAYCASTING_WORLD_H

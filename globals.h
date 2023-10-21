@@ -22,6 +22,7 @@ extern int MAP_WIDTH;
 extern int MAP_HEIGHT;
 extern float PLAYER_MOVING_SPEED;
 extern float MONSTER_MOVING_SPEED;
+extern float FOG_FACTOR;
 
 typedef std::vector<std::vector<int>> world_map_t;
 typedef std::vector<std::vector<Color>> texture_t;
