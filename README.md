@@ -3,6 +3,8 @@
 
 Welcome to my Doom-inspired first-person shooter game project, developed entirely from scratch with a focus on raycasting graphics.
 
+[Full Gameplay](https://youtu.be/KgsYZSTFZmI)
+
 ## Introduction
 
 This project is a Doom-inspired first-person shooter game that stands out because it's developed from scratch, with a strong emphasis on raycasting graphics, and extensive use of mathematics and trigonometry. 
