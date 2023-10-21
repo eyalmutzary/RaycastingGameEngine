@@ -5,6 +5,8 @@ Welcome to my Doom-inspired first-person shooter game project, developed entirel
 
 [Full Gameplay](https://youtu.be/KgsYZSTFZmI)
 
+![](https://github.com/eyalmutzary/RaycastingGameEngine/blob/master/gameplay.gif)
+
 ## Introduction
 
 This project is a Doom-inspired first-person shooter game that stands out because it's developed from scratch, with a strong emphasis on raycasting graphics, and extensive use of mathematics and trigonometry. 
